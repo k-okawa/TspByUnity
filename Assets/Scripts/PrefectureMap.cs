@@ -68,7 +68,6 @@ public class PrefectureMap : MonoBehaviour
         // 未判定の県
         var undecidedPrefs = targetPrefs.ToList();
         
-        Debug.Log(currentPref.name);
         while(true)
         {
             var nextPref = undecidedPrefs[Random.Range(0, undecidedPrefs.Count)];
@@ -112,7 +111,6 @@ public class PrefectureMap : MonoBehaviour
                 targetPrefs.Remove(prevPref);
                 undecidedPrefs = targetPrefs.ToList();
                 currentPref = prevPref;
-                Debug.Log(currentPref.name);
                 prevPref = null;
             }
         } 
