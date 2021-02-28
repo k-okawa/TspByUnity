@@ -18,4 +18,9 @@ public class PrefectureData
         longitude = float.Parse(csvLine[2]);
         latitude = float.Parse(csvLine[3]);
     }
+
+    public void Reset()
+    {
+        nextPrefecture = null;
+    }
 }

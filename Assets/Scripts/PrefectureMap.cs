@@ -3,56 +3,111 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class PrefectureMap : MonoBehaviour
 {
-    [SerializeField] private LineRenderer _lineRenderer;
+    private const string POINT_PREFAB_PATH = "Prefabs/point";
+    
+    [SerializeField] private string _csvPath = "Csv/pref";
+    [SerializeField] private Salesman _salesman;
+    [SerializeField] private Text _distanceText;
+
+    private List<PrefectureData> _prefectureList;
+    private List<Vector3> _pointList = new List<Vector3>();
     
     private void Start()
     {
-        var prefectureList = CreateMap();
-        SolveTsp(prefectureList);
-        MakeLine(prefectureList);
+        _prefectureList = CreateMap();
+        float distance = SolveTsp(_prefectureList);
+        MakePointList(_prefectureList);
+        _distanceText.text = $"Distance:{distance}";
+    }
+
+    public void OnClickRetry()
+    {
+        _prefectureList.ForEach(itr => itr.Reset());
+        float distance = SolveTsp(_prefectureList);
+        MakePointList(_prefectureList);
+        _distanceText.text = $"Distance:{distance}";
+    }
+    
+    static Material lineMaterial;
+    static void CreateLineMaterial()
+    {
+        if (!lineMaterial)
+        {
+            // Unity has a built-in shader that is useful for drawing
+            // simple colored things.
+            Shader shader = Shader.Find("Hidden/Internal-Colored");
+            lineMaterial = new Material(shader);
+            lineMaterial.hideFlags = HideFlags.HideAndDontSave;
+            // Turn on alpha blending
+            lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            // Turn backface culling off
+            lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+            // Turn off depth writes
+            lineMaterial.SetInt("_ZWrite", 0);
+        }
+    }
+
+    private void OnRenderObject()
+    {
+        CreateLineMaterial();
+        lineMaterial.SetPass(0);
+
+        GL.PushMatrix();
+        GL.MultMatrix(transform.localToWorldMatrix);
+        GL.Begin(GL.LINE_STRIP);
+        GL.Color(new Color(0,1,1));
+        foreach (var point in _pointList)
+        {
+            GL.Vertex(point);
+        }
+        GL.End();
+        GL.PopMatrix();
     }
 
     private List<PrefectureData> CreateMap()
     {
-        var csv = CsvLoader.Load("Csv/tohoku_pref");
-        var pointPrefab = Resources.Load<GameObject>("Prefabs/point");
+        var csv = CsvLoader.Load(_csvPath);
+        var pointPrefab = Resources.Load<GameObject>(POINT_PREFAB_PATH);
 
         var ret = new List<PrefectureData>();
         csv.ForEach(itr =>
         {
             var data = new PrefectureData(itr);
             ret.Add(data);
-            data.ownObj = Instantiate(pointPrefab);
+            data.ownObj = Instantiate(pointPrefab, this.transform);
             data.ownObj.name = data.name;
-            data.ownObj.transform.position = new Vector3(data.latitude, data.longitude);
+            data.ownObj.transform.localPosition = new Vector3(data.latitude, data.longitude);
         });
 
         return ret;
     }
 
-    private void MakeLine(List<PrefectureData> prefectureList)
+    private void MakePointList(List<PrefectureData> prefectureList)
     {
-        _lineRenderer.positionCount = prefectureList.Count + 1;
+        _pointList.Clear();
         
         var startPref = prefectureList.First();
         var currentPref = startPref;
-        int index = 0;
         do
         {
-            _lineRenderer.SetPosition(index, currentPref.ownObj.transform.position);
+            _pointList.Add(currentPref.ownObj.transform.position);
             currentPref = currentPref.nextPrefecture;
-            index++;
         } while (startPref != currentPref);
         
-        _lineRenderer.SetPosition(index, startPref.ownObj.transform.position);
+        _pointList.Add(startPref.ownObj.transform.position);
     }
 
-    private void SolveTsp(List<PrefectureData> prefectureList)
+    private float SolveTsp(List<PrefectureData> prefectureList)
     {
+        _salesman.Reset();
+        
         // 現在居る県
         var currentPref = prefectureList[Random.Range(0, prefectureList.Count)];
         // スタート県
@@ -68,8 +123,13 @@ public class PrefectureMap : MonoBehaviour
         // 未判定の県
         var undecidedPrefs = targetPrefs.ToList();
         
+        // 総移動距離
+        float totalDistance = 0f;
+
+        int loopCount = 0;
         while(true)
         {
+            loopCount++;
             var nextPref = undecidedPrefs[Random.Range(0, undecidedPrefs.Count)];
 
             // 次の地点の距離
@@ -86,7 +146,9 @@ public class PrefectureMap : MonoBehaviour
                 {
                     // 巡回終了
                     currentPref.nextPrefecture = nextPref;
+                    totalDistance += nextDistance;
                     nextPref.nextPrefecture = startPref;
+                    totalDistance += (nextPref.ownObj.transform.position - startPref.ownObj.transform.position).magnitude;
                     break;
                 }
                 prevPref = nextPref;
@@ -95,24 +157,35 @@ public class PrefectureMap : MonoBehaviour
             }
 
             // 二つの地点の距離判定
+            bool isShort = false;
             if (nextDistance < prevDistance)
             {
                 // 前回判定したものよりも距離が短い
                 prevPref = nextPref;
                 prevDistance = nextDistance;
+
+                isShort = true;
             }
             
             // 判定対象がない場合は経路決定
             // または
             // 前回判定したものよりも距離が長くても、確率で距離が長くても経路として確定する
-            if (undecidedPrefs.Count <= 0 /*|| Random.Range(1, 101) <= 80*/)
+            bool isSelect = undecidedPrefs.Count > 0 && !isShort && _salesman.Judge();
+            if (undecidedPrefs.Count <= 0 || isSelect)
             {
+                if (isSelect)
+                {
+                    _salesman.Travel(nextDistance);
+                }
                 currentPref.nextPrefecture = prevPref;
+                totalDistance += prevDistance;
                 targetPrefs.Remove(prevPref);
                 undecidedPrefs = targetPrefs.ToList();
                 currentPref = prevPref;
                 prevPref = null;
             }
-        } 
+        }
+        Debug.Log($"LoopCount:{loopCount}");
+        return totalDistance;
     }
 }
