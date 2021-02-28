@@ -109,7 +109,8 @@ public class PrefectureMap : MonoBehaviour
         _salesman.Reset();
         
         // 現在居る県
-        var currentPref = prefectureList[Random.Range(0, prefectureList.Count)];
+        //var currentPref = prefectureList[Random.Range(0, prefectureList.Count)];
+        var currentPref = prefectureList.Last();
         // スタート県
         var startPref = currentPref;
         // 巡回予定の県
@@ -157,26 +158,24 @@ public class PrefectureMap : MonoBehaviour
             }
 
             // 二つの地点の距離判定
-            bool isShort = false;
             if (nextDistance < prevDistance)
             {
                 // 前回判定したものよりも距離が短い
                 prevPref = nextPref;
                 prevDistance = nextDistance;
-
-                isShort = true;
+            } else if (_salesman.Judge())
+            {
+                // 距離が長くても交換する
+                prevPref = nextPref;
+                prevDistance = nextDistance;
+                _salesman.Travel(nextDistance);
             }
             
             // 判定対象がない場合は経路決定
             // または
             // 前回判定したものよりも距離が長くても、確率で距離が長くても経路として確定する
-            bool isSelect = undecidedPrefs.Count > 0 && !isShort && _salesman.Judge();
-            if (undecidedPrefs.Count <= 0 || isSelect)
+            if (undecidedPrefs.Count <= 0)
             {
-                if (isSelect)
-                {
-                    _salesman.Travel(nextDistance);
-                }
                 currentPref.nextPrefecture = prevPref;
                 totalDistance += prevDistance;
                 targetPrefs.Remove(prevPref);
