@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -79,7 +80,7 @@ public class PrefectureMap : MonoBehaviour
             ret.Add(data);
             data.ownObj = Instantiate(pointPrefab, this.transform);
             data.ownObj.name = data.name;
-            data.ownObj.transform.localPosition = new Vector3(data.longitude, data.latitude);
+            data.ownObj.transform.localPosition = new Vector3((float)data.longitude, (float)data.latitude);
         });
 
         return ret;
