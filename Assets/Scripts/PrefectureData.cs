@@ -9,7 +9,6 @@ public class PrefectureData
     public readonly float latitude;
 
     public GameObject ownObj;
-    public PrefectureData nextPrefecture;
 
     public PrefectureData(List<string> csvLine)
     {
@@ -17,10 +16,5 @@ public class PrefectureData
         name = csvLine[1];
         longitude = float.Parse(csvLine[2]);
         latitude = float.Parse(csvLine[3]);
-    }
-
-    public void Reset()
-    {
-        nextPrefecture = null;
     }
 }

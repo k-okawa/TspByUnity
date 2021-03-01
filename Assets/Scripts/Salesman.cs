@@ -7,12 +7,14 @@ public class Salesman
     public float defaultStamina = 100;
     // スタミナがMaxの時、長い距離を選択するときのレート
     public float rate = 0.5f;
+    public float decreaseRate = 0.98f;
+    public float finalStamina = 1.0e-7f;
     
-    public float _stamina;
+    public float stamina;
  
     public Salesman()
     {
-        _stamina = defaultStamina;
+        stamina = defaultStamina;
     }
 
     /// <summary>
@@ -21,20 +23,16 @@ public class Salesman
     public bool Judge()
     {
         float rot = Random.Range(0, defaultStamina);
-        return rot < _stamina * rate;
+        return rot < stamina * rate;
     }
 
-    public void Travel(float distance)
+    public void Travel() 
     {
-        _stamina -= distance;
-        if (_stamina < 0)
-        {
-            _stamina = 0;
-        }
+        stamina *= decreaseRate;
     }
 
     public void Reset()
     {
-        _stamina = defaultStamina;
+        stamina = defaultStamina;
     }
 }
