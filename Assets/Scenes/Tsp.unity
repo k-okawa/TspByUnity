@@ -522,8 +522,10 @@ MonoBehaviour:
   _csvPath: Csv/pref
   _salesman:
     defaultStamina: 100
-    rate: 0.5
-    _stamina: 100
+    rate: 1
+    decreaseRate: 0.98
+    finalStamina: 0.0000001
+    stamina: 100
   _distanceText: {fileID: 417386776}
 --- !u!4 &823391437
 Transform:

@@ -6,7 +6,7 @@ public class Salesman
 {
     public float defaultStamina = 100;
     // スタミナがMaxの時、長い距離を選択するときのレート
-    public float rate = 0.5f;
+    public float rate = 1f;
     public float decreaseRate = 0.98f;
     public float finalStamina = 1.0e-7f;
     

@@ -148,8 +148,8 @@ public class PrefectureMap : MonoBehaviour
                         currentRoute.Add(nextPref);
                         totalDistance += nextDistance;
                         currentRoute.Add(startPref);
-                        totalDistance += (nextPref.ownObj.transform.position - startPref.ownObj.transform.position)
-                            .magnitude;
+                        totalDistance += GeoUtil.GeoDistance(nextPref.latitude, nextPref.longitude, startPref.latitude,
+                            startPref.longitude, 10);
                         break;
                     }
                     prevPref = nextPref;
