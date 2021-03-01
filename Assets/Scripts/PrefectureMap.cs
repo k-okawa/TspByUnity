@@ -169,8 +169,6 @@ public class PrefectureMap : MonoBehaviour
             }
             
             // 判定対象がない場合は経路決定
-            // または
-            // 前回判定したものよりも距離が長くても、確率で距離が長くても経路として確定する
             if (undecidedPrefs.Count <= 0)
             {
                 currentPref.nextPrefecture = prevPref;
