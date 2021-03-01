@@ -18,16 +18,16 @@ public class PrefectureMap : MonoBehaviour
     private void Start()
     {
         _prefectureList = CreateMap();
-        (var route, float distance) = SolveTsp(_prefectureList);
+        (var route, double distance) = SolveTsp(_prefectureList);
         MakePointList(route);
-        _distanceText.text = $"Distance:{distance}";
+        _distanceText.text = $"Distance:{(distance/1000f):F3}km";
     }
 
     public void OnClickRetry()
     {
-        (var route, float distance) = SolveTsp(_prefectureList);
+        (var route, double distance) = SolveTsp(_prefectureList);
         MakePointList(route);
-        _distanceText.text = $"Distance:{distance}";
+        _distanceText.text = $"Distance:{(distance/1000f):F3}km";
     }
     
     static Material lineMaterial;
@@ -79,7 +79,7 @@ public class PrefectureMap : MonoBehaviour
             ret.Add(data);
             data.ownObj = Instantiate(pointPrefab, this.transform);
             data.ownObj.name = data.name;
-            data.ownObj.transform.localPosition = new Vector3(data.latitude, data.longitude);
+            data.ownObj.transform.localPosition = new Vector3(data.longitude, data.latitude);
         });
 
         return ret;
@@ -94,13 +94,13 @@ public class PrefectureMap : MonoBehaviour
         }
     }
 
-    private (List<PrefectureData> route, float distance) SolveTsp(List<PrefectureData> prefectureList)
+    private (List<PrefectureData> route, double distance) SolveTsp(List<PrefectureData> prefectureList)
     {
         _salesman.Reset();
         
         // ルート
         List<PrefectureData> optimalRoute = null;
-        float optimalDistance = 0f;
+        double optimalDistance = 0f;
 
         int loopCount = 0;
 
@@ -118,7 +118,7 @@ public class PrefectureMap : MonoBehaviour
             // 前回検索した県
             PrefectureData prevPref = null;
             // 前回の距離を保存
-            float prevDistance = 0f;
+            double prevDistance = 0f;
             // 未判定の県
             var undecidedPrefs = targetPrefs.ToList();
             
@@ -127,15 +127,15 @@ public class PrefectureMap : MonoBehaviour
             currentRoute.Add(startPref);
 
             // 総移動距離
-            float totalDistance = 0f;
+            double totalDistance = 0f;
 
             while (true) {
                 loopCount++;
                 var nextPref = undecidedPrefs[Random.Range(0, undecidedPrefs.Count)];
 
                 // 次の地点の距離
-                float nextDistance = (nextPref.ownObj.gameObject.transform.position -
-                                      currentPref.ownObj.gameObject.transform.position).magnitude;
+                double nextDistance = GeoUtil.GeoDistance(nextPref.latitude, nextPref.longitude, currentPref.latitude,
+                    currentPref.longitude, 10);
 
                 // 判定対象から削除
                 undecidedPrefs.Remove(nextPref);

@@ -14,7 +14,7 @@ public class PrefectureData
     {
         id = int.Parse(csvLine[0]);
         name = csvLine[1];
-        longitude = float.Parse(csvLine[2]);
-        latitude = float.Parse(csvLine[3]);
+        latitude = float.Parse(csvLine[2]);
+        longitude = float.Parse(csvLine[3]);
     }
 }
