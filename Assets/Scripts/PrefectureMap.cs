@@ -95,6 +95,11 @@ public class PrefectureMap : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 最短経路に近い経路を求める
+    /// </summary>
+    /// <param name="prefectureList">県庁所在地データ</param>
+    /// <returns>route:経路 distance:総距離</returns>
     private (List<PrefectureData> route, double distance) SolveTsp(List<PrefectureData> prefectureList)
     {
         _salesman.Reset();
@@ -179,6 +184,7 @@ public class PrefectureMap : MonoBehaviour
                 }
             }
             
+            // 体力減少
             _salesman.Travel();
 
             if (optimalRoute == null) {
